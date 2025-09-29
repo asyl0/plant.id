@@ -1,0 +1,51 @@
+name: green_plant_22
+description: "Жасыл планета - приложение для распознавания растений"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.9.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  
+  # Для работы с камерой и галереей
+  image_picker: ^1.0.7
+  
+  # Для работы с .env файлом
+  flutter_dotenv: ^5.1.0
+  
+  # Для HTTP запросов
+  http: ^1.1.2
+  
+  # Для работы с базой данных SQLite
+  sqflite: ^2.3.0
+  path: ^1.8.3
+  
+  # Для работы с JSON
+  json_annotation: ^4.8.1
+  
+  # Для работы с изображениями
+  cached_network_image: ^3.3.1
+  
+  # Для работы с файлами
+  path_provider: ^2.1.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  
+  # Для генерации JSON кода
+  json_serializable: ^6.7.1
+  build_runner: ^2.4.7
+
+flutter:
+  uses-material-design: true
+  
+  assets:
+    - .env
