@@ -8,18 +8,39 @@ class OpenRouterService {
   
   String get apiKey => dotenv.env['OPEN_ROUTER_API_KEY'] ?? '';
 
-  Future<Map<String, String>> getPlantInfo(String scientificName) async {
+  Future<Map<String, String>> getPlantInfo(String scientificName, {String? russianName}) async {
     try {
-      final prompt = '''Сіз ботаника маманысыз. $scientificName өсімдігі туралы толық ақпарат беріңіз.
+      // Используем русское название если есть, иначе научное
+      final plantName = russianName ?? scientificName;
+      
+      final prompt = '''Сіз ботаника маманысыз және қазақ тілінің маманысыз. $plantName өсімдігі туралы толық ақпарат беріңіз.
 
-Келесі форматта жауап беріңіз:
+МАҢЫЗДЫ ТАЛАПТАР:
+- Барлық жауапты ТЕК қазақ тілінде ғана жазыңыз!
+- Орыс, ағылшын немесе басқа тілдерде жазбаңыз!
+- Қазақ тілінің грамматикасын дұрыс қолданыңыз
+- Табиғи, түсінікті және әдеби қазақ тілінде жазыңыз
+- Машиналық аударма стилінде жазбаңыз
+- Қазақ тілінің лексикасын дұрыс қолданыңыз
+- Сипаттамада, пайдасында және зиянында өсімдіктің атауын "$plantName" деп атаңыз
 
-ҚАЗАҚША АТЫ: [өсімдіктің қазақша атын жаз]
-СИПАТТАМАСЫ: [өсімдіктің сипаттамасын 3-5 сөйлемде жазыңыз - пішіні, жапырақтары, гүлдері, мөлшері туралы]
-ПАЙДАСЫ: [өсімдіктің негізгі пайдасын тізіп жазыңыз - емдік қасиеттері, тағам ретінде пайдаланылуы, басқа пайдалары]
-ЗИЯНЫ: [өсімдіктің зиянын немесе сақтық шараларын жазыңыз - улылығы, аллергия, басқа қауіптері. Егер зияны жоқ болса "Зияны жоқ" деп жазыңыз]
+КЕЛЕСІ ФОРМАТТА ЖАУАП БЕРІҢІЗ:
 
-Әр бөлімді жаңа жолдан бастап, нақты, ғылыми дәл және түсінікті жазыңыз. Машиналық аударма емес, табиғи қазақ тілінде жазыңыз.''';
+СИПАТТАМАСЫ: [$plantName өсімдігінің толық сипаттамасын 5-7 сөйлемде жазыңыз. Өсімдіктің пішіні, жапырақтары, гүлдері, мөлшері, өсу ортасы, түсі, ерекшеліктері, құрылымы туралы толық ақпарат беріңіз. Сипаттаманы "$plantName" деп бастаңыз және қазақ тілінің әдеби стилінде жазыңыз]
+
+ПАЙДАСЫ: [$plantName өсімдігінің пайдасын толық тізіп жазыңыз. Емдік қасиеттері, тағам ретінде пайдаланылуы, көркемдік мақсатта өсірілуі, экологиялық маңызы, адам денсаулығына тиімділігі, басқа пайдалары туралы айтыңыз. Әр пайданы жеке сөйлеммен сипаттаңыз]
+
+ЗИЯНЫ: [$plantName өсімдігінің зиянын немесе сақтық шараларын толық жазыңыз. Улылығы, аллергия, басқа қауіптері, қолдану кезіндегі ескертулер, қауіпсіздік шаралары туралы айтыңыз. Егер зияны жоқ болса "Зияны жоқ" деп жазыңыз. Әр зиянды жеке сөйлеммен сипаттаңыз]
+
+ҚОСЫМША ТАЛАПТАР:
+- Әр бөлімді жаңа жолдан бастаңыз
+- Нақты, ғылыми дәл және түсінікті жазыңыз
+- Машиналық аударма емес, табиғи қазақ тілінде жазыңыз
+- Қазақ тілінің грамматикасын дұрыс қолданыңыз
+- Лексиканы дұрыс таңдаңыз
+- Сөйлем құрылымын дұрыс жасаңыз
+- Барлық ақпаратты толық және нақты беріңіз
+- Әдеби қазақ тілінде жазыңыз''';
 
       final response = await http.post(
         Uri.parse('$baseUrl/chat/completions'),
@@ -65,31 +86,46 @@ class OpenRouterService {
       String currentValue = '';
 
       for (var line in lines) {
-        // Ищем ключевые слова в начале строки
-        if (line.toUpperCase().startsWith('ҚАЗАҚША АТЫ:')) {
-          if (currentKey.isNotEmpty) {
-            result[currentKey] = currentValue.trim();
-          }
-          currentKey = 'kazakhName';
-          currentValue = line.substring('ҚАЗАҚША АТЫ:'.length).trim();
-        } else if (line.toUpperCase().startsWith('СИПАТТАМАСЫ:')) {
+        // Ищем ключевые слова в начале строки (учитываем возможные варианты)
+        if (line.toUpperCase().startsWith('СИПАТТАМАСЫ:') || 
+            line.toUpperCase().startsWith('СИПАТТАМА:') ||
+            line.toUpperCase().startsWith('СИПАТТАМАСЫ') ||
+            line.toUpperCase().startsWith('СИПАТТАМА')) {
           if (currentKey.isNotEmpty) {
             result[currentKey] = currentValue.trim();
           }
           currentKey = 'description';
-          currentValue = line.substring('СИПАТТАМАСЫ:'.length).trim();
-        } else if (line.toUpperCase().startsWith('ПАЙДАСЫ:')) {
+          // Убираем различные варианты префикса
+          currentValue = line
+              .replaceFirst(RegExp(r'^СИПАТТАМАСЫ:?\s*', caseSensitive: false), '')
+              .replaceFirst(RegExp(r'^СИПАТТАМА:?\s*', caseSensitive: false), '')
+              .trim();
+        } else if (line.toUpperCase().startsWith('ПАЙДАСЫ:') || 
+                   line.toUpperCase().startsWith('ПАЙДАСЫ') ||
+                   line.toUpperCase().startsWith('ПАЙДА:') ||
+                   line.toUpperCase().startsWith('ПАЙДА')) {
           if (currentKey.isNotEmpty) {
             result[currentKey] = currentValue.trim();
           }
           currentKey = 'benefits';
-          currentValue = line.substring('ПАЙДАСЫ:'.length).trim();
-        } else if (line.toUpperCase().startsWith('ЗИЯНЫ:')) {
+          // Убираем различные варианты префикса
+          currentValue = line
+              .replaceFirst(RegExp(r'^ПАЙДАСЫ:?\s*', caseSensitive: false), '')
+              .replaceFirst(RegExp(r'^ПАЙДА:?\s*', caseSensitive: false), '')
+              .trim();
+        } else if (line.toUpperCase().startsWith('ЗИЯНЫ:') || 
+                   line.toUpperCase().startsWith('ЗИЯНЫ') ||
+                   line.toUpperCase().startsWith('ЗИЯН:') ||
+                   line.toUpperCase().startsWith('ЗИЯН')) {
           if (currentKey.isNotEmpty) {
             result[currentKey] = currentValue.trim();
           }
           currentKey = 'harms';
-          currentValue = line.substring('ЗИЯНЫ:'.length).trim();
+          // Убираем различные варианты префикса
+          currentValue = line
+              .replaceFirst(RegExp(r'^ЗИЯНЫ:?\s*', caseSensitive: false), '')
+              .replaceFirst(RegExp(r'^ЗИЯН:?\s*', caseSensitive: false), '')
+              .trim();
         } else if (currentKey.isNotEmpty) {
           // Продолжаем накапливать значение для текущего ключа
           currentValue += ' $line';
@@ -105,14 +141,13 @@ class OpenRouterService {
       result.forEach((key, value) {
         result[key] = value
             .replaceFirst(RegExp(r'^\d+\.\s*'), '') // Убираем номера пунктов
-            .replaceFirst(RegExp(r'^[-•]\s*'), '') // Убираем маркеры списка
+            .replaceFirst(RegExp(r'^[-•*]\s*'), '') // Убираем маркеры списка
+            .replaceFirst(RegExp(r'^[•·]\s*'), '') // Убираем другие маркеры
+            .replaceAll(RegExp(r'\s+'), ' ') // Убираем лишние пробелы
             .trim();
       });
 
       // Проверяем, что все необходимые поля заполнены
-      if (result['kazakhName']?.isEmpty ?? true) {
-        result['kazakhName'] = 'Ақпарат жоқ';
-      }
       if (result['description']?.isEmpty ?? true) {
         result['description'] = 'Ақпарат жоқ';
       }
@@ -132,7 +167,6 @@ class OpenRouterService {
 
   Map<String, String> _getDefaultInfo(String scientificName) {
     return {
-      'kazakhName': scientificName,
       'description': 'Ақпарат жоқ',
       'benefits': 'Ақпарат жоқ',
       'harms': 'Зияны жоқ',

@@ -106,7 +106,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _plant.kazakhName ?? _plant.commonName,
+                        _plant.kazakhName ?? _plant.commonName, // Русское название
                         style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -114,7 +114,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        _plant.scientificName,
+                        _plant.scientificName, // Научное название
                         style: TextStyle(
                           fontSize: 18,
                           fontStyle: FontStyle.italic,

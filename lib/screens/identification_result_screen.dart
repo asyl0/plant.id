@@ -70,17 +70,16 @@ class _IdentificationResultScreenState
       // Получаем информацию от OpenRouter
       final plantInfo = await _openRouterService.getPlantInfo(
         identification.scientificName,
+        russianName: identification.russianName,
       );
 
       // Создаем модель растения
       final plant = PlantModel(
         scientificName: identification.scientificName,
-        commonName: identification.commonNames.isNotEmpty
-            ? identification.commonNames.first
-            : identification.scientificName,
+        commonName: identification.russianName, // Используем русское название
         imagePath: widget.imagePath,
         probability: identification.probability,
-        kazakhName: plantInfo['kazakhName'],
+        kazakhName: identification.russianName, // Русское название как kazakhName
         description: plantInfo['description'],
         benefits: plantInfo['benefits'],
         harms: plantInfo['harms'],
@@ -259,24 +258,24 @@ class _IdentificationResultScreenState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        plant.scientificName,
+                        plant.russianName, // Используем русское название
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: Colors.green[900],
                         ),
                       ),
-                      if (plant.commonNames.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Text(
-                            plant.commonNames.first,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[600],
-                            ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          plant.scientificName, // Научное название внизу
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontStyle: FontStyle.italic,
+                            color: Colors.grey[600],
                           ),
                         ),
+                      ),
                     ],
                   ),
                 ),

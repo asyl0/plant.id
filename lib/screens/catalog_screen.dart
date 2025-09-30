@@ -170,7 +170,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      plant.kazakhName ?? plant.commonName,
+                      plant.kazakhName ?? plant.commonName, // Русское название
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -180,7 +180,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      plant.scientificName,
+                      plant.scientificName, // Научное название
                       style: TextStyle(
                         fontSize: 14,
                         fontStyle: FontStyle.italic,

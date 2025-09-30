@@ -40,20 +40,29 @@ class PlantIdService {
           
           final suggestions = data['result']['classification']['suggestions'] as List;
           
-          return suggestions.map((suggestion) {
-            return PlantIdentification(
-              scientificName: suggestion['name'] as String? ?? 'Белгісіз',
-              commonNames: (suggestion['details']?['common_names'] as List<dynamic>? ?? [])
-                  .map((e) => e.toString())
-                  .toList(),
-              probability: (suggestion['probability'] as num?)?.toDouble() ?? 0.0,
-              images: (suggestion['similar_images'] as List<dynamic>? ?? [])
-                  .map((img) => (img['url'] ?? img['url_small']) as String? ?? '')
-                  .where((url) => url.isNotEmpty)
-                  .take(2)
-                  .toList(),
-            );
-          }).toList();
+      return suggestions.map((suggestion) {
+        // Получаем русские названия из common_names
+        final commonNames = (suggestion['details']?['common_names'] as List<dynamic>? ?? [])
+            .map((e) => e.toString())
+            .toList();
+        
+        // Ищем русское название (обычно первое в списке)
+        // Если нет русских названий, используем научное название
+        final scientificName = suggestion['name'] as String? ?? 'Белгісіз';
+        final russianName = commonNames.isNotEmpty ? commonNames.first : _getRussianNameFromScientific(scientificName);
+        
+        return PlantIdentification(
+          scientificName: suggestion['name'] as String? ?? 'Белгісіз',
+          commonNames: commonNames,
+          russianName: russianName, // Добавляем русское название
+          probability: (suggestion['probability'] as num?)?.toDouble() ?? 0.0,
+          images: (suggestion['similar_images'] as List<dynamic>? ?? [])
+              .map((img) => (img['url'] ?? img['url_small']) as String? ?? '')
+              .where((url) => url.isNotEmpty)
+              .take(2)
+              .toList(),
+        );
+      }).toList();
         }
       }
       
@@ -84,5 +93,123 @@ class PlantIdService {
       debugPrint('Error getting plant details: $e');
       return {};
     }
+  }
+
+  // Функция для получения русских названий из научных
+  String _getRussianNameFromScientific(String scientificName) {
+    // Словарь известных растений
+    final plantNames = {
+      'Nymphaea x marliacea': 'Кувшинка гибридная',
+      'Nymphaea alba': 'Кувшинка белая',
+      'Nymphaea': 'Кувшинка',
+      'Rosa chinensis': 'Роза китайская',
+      'Rosa': 'Роза',
+      'Aloe vera': 'Алоэ вера',
+      'Mentha piperita': 'Мята перечная',
+      'Kroenleinia grusonii': 'Эхинокактус Грузона',
+      'Cactus': 'Кактус',
+      'Lily': 'Лилия',
+      'Tulip': 'Тюльпан',
+      'Sunflower': 'Подсолнечник',
+      'Rose': 'Роза',
+      'Lavender': 'Лаванда',
+      'Jasmine': 'Жасмин',
+      'Orchid': 'Орхидея',
+      'Fern': 'Папоротник',
+      'Pine': 'Сосна',
+      'Oak': 'Дуб',
+      'Maple': 'Клен',
+      'Birch': 'Береза',
+      'Willow': 'Ива',
+      'Poplar': 'Тополь',
+      'Linden': 'Липа',
+      'Spruce': 'Ель',
+      'Fir': 'Пихта',
+      'Cedar': 'Кедр',
+      'Juniper': 'Можжевельник',
+      'Thuja': 'Туя',
+      'Cypress': 'Кипарис',
+      'Magnolia': 'Магнолия',
+      'Cherry': 'Вишня',
+      'Apple': 'Яблоня',
+      'Pear': 'Груша',
+      'Plum': 'Слива',
+      'Peach': 'Персик',
+      'Apricot': 'Абрикос',
+      'Walnut': 'Грецкий орех',
+      'Hazel': 'Лещина',
+      'Almond': 'Миндаль',
+      'Pistachio': 'Фисташка',
+      'Pecan': 'Пекан',
+      'Acorn': 'Желудь',
+      'Pine cone': 'Сосновая шишка',
+      'Fir cone': 'Еловая шишка',
+      'Cedar cone': 'Кедровая шишка',
+      'Juniper berry': 'Можжевеловая ягода',
+      'Rose hip': 'Шиповник',
+      'Hawthorn': 'Боярышник',
+      'Elderberry': 'Бузина',
+      'Viburnum': 'Калина',
+      'Rowan': 'Рябина',
+      'Bird cherry': 'Черемуха',
+      'Lilac': 'Сирень',
+      'Honeysuckle': 'Жимолость',
+      'Wisteria': 'Глициния',
+      'Clematis': 'Клематис',
+      'Ivy': 'Плющ',
+      'Grape': 'Виноград',
+      'Hops': 'Хмель',
+      'Morning glory': 'Ипомея',
+      'Sweet pea': 'Душистый горошек',
+      'Nasturtium': 'Настурция',
+      'Petunia': 'Петуния',
+      'Geranium': 'Герань',
+      'Begonia': 'Бегония',
+      'Fuchsia': 'Фуксия',
+      'Impatiens': 'Бальзамин',
+      'Marigold': 'Бархатцы',
+      'Zinnia': 'Цинния',
+      'Aster': 'Астра',
+      'Chrysanthemum': 'Хризантема',
+      'Dahlia': 'Георгин',
+      'Gladiolus': 'Гладиолус',
+      'Iris': 'Ирис',
+      'Daffodil': 'Нарцисс',
+      'Hyacinth': 'Гиацинт',
+      'Crocus': 'Крокус',
+      'Snowdrop': 'Подснежник',
+      'Lily of the valley': 'Ландыш',
+      'Forget-me-not': 'Незабудка',
+      'Pansy': 'Анютины глазки',
+      'Violet': 'Фиалка',
+      'Primrose': 'Примула',
+      'Cyclamen': 'Цикламен',
+      'Azalea': 'Азалия',
+      'Rhododendron': 'Рододендрон',
+      'Camellia': 'Камелия',
+      'Hibiscus': 'Гибискус',
+      'Bougainvillea': 'Бугенвиллия',
+      'Oleander': 'Олеандр',
+      'Gardenia': 'Гардения',
+      'Stephanotis': 'Стефанотис',
+      'Plumeria': 'Плюмерия',
+      'Frangipani': 'Франжипани',
+    };
+
+    // Ищем точное совпадение
+    if (plantNames.containsKey(scientificName)) {
+      return plantNames[scientificName]!;
+    }
+
+    // Ищем по частичному совпадению
+    for (final entry in plantNames.entries) {
+      if (scientificName.toLowerCase().contains(entry.key.toLowerCase()) ||
+          entry.key.toLowerCase().contains(scientificName.toLowerCase())) {
+        return entry.value;
+      }
+    }
+
+    // Если не найдено, возвращаем научное название
+    return scientificName;
   }
 }
